@@ -1,0 +1,88 @@
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+local function buatESP(player)
+    if player == LocalPlayer then return end
+
+    local box = Drawing.new("Square")
+    box.Color = Color3.fromRGB(0, 255, 0)
+    box.Thickness = 1
+    box.Filled = false
+
+    local line = Drawing.new("Line")
+    line.Color = Color3.fromRGB(255, 0, 0)
+    line.Thickness = 1
+
+    local name = Drawing.new("Text")
+    name.Color = Color3.fromRGB(255, 255, 255)
+    name.Size = 14
+    name.Center = true
+    name.Outline = true
+
+    local healthBar = Drawing.new("Line")
+    healthBar.Thickness = 2
+
+    RunService.RenderStepped:Connect(function()
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Head") and player.Character:FindFirstChild("Humanoid") then
+            local hrp = player.Character.HumanoidRootPart
+            local head = player.Character.Head
+            local hum = player.Character.Humanoid
+
+            local pos, visible = Camera:WorldToViewportPoint(hrp.Position)
+            local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+            local footPos = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
+
+            if visible then
+                local height = math.abs(headPos.Y - footPos.Y)
+                local width = height / 2
+                local x = pos.X - width / 2
+                local y = pos.Y - height / 2
+
+                -- Box
+                box.Visible = true
+                box.Size = Vector2.new(width, height)
+                box.Position = Vector2.new(x, y)
+
+                -- Antenna Line
+                line.Visible = true
+                line.From = Vector2.new(pos.X, 0)
+                line.To = Vector2.new(pos.X, pos.Y)
+
+                -- Name
+                name.Visible = true
+                name.Text = player.Name
+                name.Position = Vector2.new(pos.X, y - 16)
+
+                -- Health Bar
+                local hpPercent = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
+                local barHeight = height * hpPercent
+                local barTop = y + height - barHeight
+
+                healthBar.Visible = true
+                healthBar.Color = Color3.fromRGB(255 - (hpPercent * 255), hpPercent * 255, 0)
+                healthBar.From = Vector2.new(x - 6, y + height)
+                healthBar.To = Vector2.new(x - 6, barTop)
+            else
+                box.Visible = false
+                line.Visible = false
+                name.Visible = false
+                healthBar.Visible = false
+            end
+        else
+            box.Visible = false
+            line.Visible = false
+            name.Visible = false
+            healthBar.Visible = false
+        end
+    end)
+end
+
+for _, player in ipairs(Players:GetPlayers()) do
+    buatESP(player)
+end
+
+Players.PlayerAdded:Connect(function(player)
+    buatESP(player)
+end)
