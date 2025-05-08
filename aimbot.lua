@@ -185,3 +185,28 @@ end
 Players.PlayerAdded:Connect(function(player)
     buatESP(player)
 end)
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local function IsValidTarget(player, aimPartName)
+    if player == LocalPlayer then return false end
+    if not player.Character then return false end
+    if not player.Character:FindFirstChild(aimPartName) then return false end
+    if not player.Character:FindFirstChild("Humanoid") then return false end
+    if player.Character.Humanoid.Health <= 0 then return false end
+    if LocalPlayer:IsFriendsWith(player.UserId) then return false end
+    if player.Team == LocalPlayer.Team then return false end
+
+    -- Wall check
+    local part = player.Character[aimPartName]
+    local origin = Camera.CFrame.Position
+    local direction = (part.Position - origin).Unit * 500
+
+    local rayParams = RaycastParams.new()
+    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+    rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
+
+    local result = workspace:Raycast(origin, direction, rayParams)
+    return result and result.Instance:IsDescendantOf(part.Parent)
+end
